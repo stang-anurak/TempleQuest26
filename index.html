@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="A self-guided pilgrimage through seven temples in Bangkok, on foot and by public transit." />
+<meta name="theme-color" content="#F5F3EC" />
+<title>Seven Temples, One Day — Bangkok Temple Quest</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2315130F'/%3E%3Ctext x='50' y='69' font-size='58' text-anchor='middle' fill='%23F5F3EC' font-family='Georgia,serif'%3E%E0%B8%A7%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root{
+  --paper:#F5F3EC; --paper-deep:#ECE8DA; --ink:#15130F; --stone:#736E63;
+  --line:#DBD5C4; --ember:#C1440E; --brass:#8C6D26;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.disp{font-family:'Bricolage Grotesque',sans-serif}
+.thai{font-family:'IBM Plex Sans Thai',sans-serif}
+.mono{font-family:'IBM Plex Mono',monospace}
+::selection{background:var(--ink);color:var(--paper)}
+a{color:inherit}
+.container{max-width:1360px;margin:0 auto;padding-left:24px;padding-right:24px}
+@media(min-width:768px){.container{padding-left:48px;padding-right:48px}}
+@media(min-width:1280px){.container{padding-left:72px;padding-right:72px}}
+.section{padding:96px 0}
+@media(max-width:767px){.section{padding:64px 0}}
+.eyebrow{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone)}
+.eyebrow:before{content:'';width:7px;height:7px;border-radius:50%;background:var(--ember);flex:none}
+.hl-1{font-size:clamp(2.6rem,6vw,5.2rem);line-height:.98;letter-spacing:-.02em;font-weight:700}
+.hl-2{font-size:clamp(2rem,4.2vw,3.4rem);line-height:1.02;letter-spacing:-.015em;font-weight:600}
+.hairline{border-top:1px solid var(--line)}
+.underline-hover{position:relative;text-decoration:none}
+.underline-hover:after{content:'';position:absolute;left:0;right:100%;bottom:-2px;height:1px;background:var(--ember);transition:right .35s cubic-bezier(.2,.8,.2,1)}
+.underline-hover:hover:after{right:0}
+/* language toggle */
+[data-en]{display:inline}
+[data-th]{display:none}
+html.lang-th [data-en]{display:none}
+html.lang-th [data-th]{display:inline}
+.lang-btn{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;border:1px solid var(--ink);border-radius:999px;padding:5px 13px;background:transparent;cursor:pointer;transition:.2s}
+.lang-btn:hover{background:var(--ink);color:var(--paper)}
+/* nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:40;background:rgba(245,243,236,.86);backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:border-color .3s}
+.nav.solid{border-color:var(--line)}
+.nav a{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--stone)}
+.nav a:hover{color:var(--ink)}
+/* reveal */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.6,.2,1),transform .7s cubic-bezier(.2,.6,.2,1)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+/* hero photo */
+.hero-photo{filter:grayscale(1) sepia(6%) contrast(1.06)}
+.hero-slider{overflow:hidden;position:relative}
+.hero-track{display:flex;height:100%;transition:transform 1.1s cubic-bezier(.65,0,.35,1)}
+.hero-slide{flex:0 0 100%;height:100%;position:relative}
+.hero-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-cap{transition:opacity .4s}
+.hero-dots{position:absolute;right:20px;bottom:16px;display:flex;gap:8px;z-index:2}
+@media(min-width:768px){.hero-dots{right:44px}}
+.hero-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);border:none;padding:0;cursor:pointer;transition:.3s}
+.hero-dot.on{background:#fff;width:18px;border-radius:4px}
+/* route list */
+.route-row{display:grid;grid-template-columns:56px 1fr auto 28px;align-items:center;gap:20px;padding:26px 0;border-top:1px solid var(--line);text-decoration:none;color:var(--ink);position:relative}
+.route-row:last-child{border-bottom:1px solid var(--line)}
+.route-row .idx{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--stone)}
+.route-row .name{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:clamp(1.35rem,2.6vw,2.1rem);letter-spacing:-.01em}
+.route-row .thai-sub{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:var(--stone);margin-top:2px}
+.route-row .time{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--stone);white-space:nowrap}
+.route-row .arrow{font-size:20px;color:var(--ember);opacity:0;transform:translateX(-6px);transition:.3s}
+.route-row:hover{background:var(--paper-deep)}
+.route-row:hover .arrow{opacity:1;transform:none}
+.route-row:hover .name{color:var(--ember)}
+@media(max-width:640px){.route-row{grid-template-columns:36px 1fr auto;gap:12px}.route-row .arrow{display:none}}
+#routePreview{position:fixed;z-index:60;width:220px;height:280px;pointer-events:none;opacity:0;transition:opacity .25s;overflow:hidden;top:0;left:0;border:1px solid var(--ink)}
+#routePreview img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) sepia(6%) contrast(1.06)}
+@media(max-width:900px){#routePreview{display:none}}
+/* map */
+.map-frame{height:520px;border:1px solid var(--line)}
+#map{height:100%}
+.leaflet-popup-content-wrapper{background:var(--ink);color:var(--paper);border-radius:2px}
+.leaflet-popup-tip{background:var(--ink)}
+.leaflet-control-zoom a{background:var(--paper)!important;color:var(--ink)!important;border-color:var(--line)!important}
+.stop-marker{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--ink)}
+/* timeline */
+.tl-row{display:grid;grid-template-columns:120px 1px 1fr;gap:28px;padding:28px 0;border-top:1px solid var(--line)}
+.tl-row:last-child{border-bottom:1px solid var(--line)}
+.tl-row .rule{background:var(--line)}
+.tl-time{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ember);padding-top:4px}
+@media(max-width:640px){.tl-row{grid-template-columns:70px 1px 1fr;gap:16px}}
+/* temple spreads */
+.spread{display:grid;grid-template-columns:1fr;gap:36px;padding:64px 0;border-top:1px solid var(--line)}
+.spread:last-child{border-bottom:1px solid var(--line)}
+@media(min-width:900px){.spread{grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+  .spread.flip .img-col{order:2} .spread.flip .txt-col{order:1}}
+.spread .img-col img{width:100%;aspect-ratio:4/5;object-fit:cover;filter:grayscale(1) sepia(6%) contrast(1.06);border:1px solid var(--ink)}
+.spread .num{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--stone);letter-spacing:.1em}
+.spread h3{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:clamp(2rem,3.6vw,3.1rem);letter-spacing:-.02em;line-height:1;margin-top:6px}
+.spread .thai-name{font-family:'IBM Plex Sans Thai',sans-serif;color:var(--stone);font-size:14px;margin-top:6px}
+.spread p.hist{margin-top:20px;color:var(--ink);font-size:15px;line-height:1.7;max-width:46ch}
+.fact{border-top:1px solid var(--line);padding:12px 0;display:grid;grid-template-columns:130px 1fr;gap:16px;font-size:13px}
+.fact b{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;letter-spacing:.1em;color:var(--stone)}
+.facts{margin-top:26px}
+.facts .fact:last-child{border-bottom:1px solid var(--line)}
+/* field notes */
+.note{display:grid;grid-template-columns:56px 1fr;gap:20px;padding:26px 0;border-top:1px solid var(--line)}
+.notes .note:last-child{border-bottom:1px solid var(--line)}
+.note .num{font-family:'IBM Plex Mono',monospace;color:var(--stone);font-size:13px}
+.note h4{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:1.15rem;margin:0 0 6px}
+.note p{margin:0;color:var(--stone);font-size:14px;line-height:1.6;max-width:50ch}
+/* photo grid */
+.photo-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;filter:grayscale(1) sepia(6%) contrast(1.06)}
+.photo-grid figcaption{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;color:var(--stone);margin-top:8px}
+/* checklist */
+.stamp{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:13px;cursor:pointer;transition:.2s;background:var(--paper)}
+.stamp.on{background:var(--ink);color:var(--paper)}
+.progress-track{height:2px;background:var(--line);flex:1}
+.progress-fill{height:100%;background:var(--ink);width:0;transition:width .4s}
+/* misc */
+.backtop{position:fixed;right:20px;bottom:20px;z-index:30;width:44px;height:44px;border-radius:50%;border:1px solid var(--ink);background:var(--paper);display:grid;place-items:center;opacity:0;transform:translateY(10px);transition:.3s;text-decoration:none;color:var(--ink)}
+.backtop.show{opacity:1;transform:none}
+.stat-cell{padding:0 22px;border-left:1px solid var(--line)}
+.stat-cell:first-child{border-left:0;padding-left:0}
+.big-close{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:clamp(2.6rem,7vw,6rem);line-height:.98;letter-spacing:-.02em}
+</style>
+</head>
+<body>
+
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:z-[100] focus:top-4 focus:left-4 focus:bg-[var(--ink)] focus:text-[var(--paper)] focus:px-4 focus:py-2 focus:text-sm"><span data-en>Skip to content</span><span data-th>ข้ามไปยังเนื้อหา</span></a>
+
+<nav class="nav">
+  <div class="container flex items-center justify-between py-4">
+    <a href="#home" class="disp font-semibold text-sm tracking-tight">Temple Quest <span class="mono text-[var(--ember)] text-xs align-top">'26</span></a>
+    <div class="hidden md:flex items-center gap-8">
+      <a href="#route" class="underline-hover"><span data-en>Route</span><span data-th>เส้นทาง</span></a>
+      <a href="#map-section" class="underline-hover"><span data-en>Map</span><span data-th>แผนที่</span></a>
+      <a href="#schedule" class="underline-hover"><span data-en>Schedule</span><span data-th>กำหนดการ</span></a>
+      <a href="#temples" class="underline-hover"><span data-en>Temples</span><span data-th>วัดทั้งเจ็ด</span></a>
+      <a href="#guide" class="underline-hover"><span data-en>Guide</span><span data-th>คู่มือ</span></a>
+      <a href="#checklist" class="underline-hover"><span data-en>Checklist</span><span data-th>เช็คลิสต์</span></a>
+    </div>
+    <button id="langBtn" class="lang-btn" aria-label="Switch language">ไทย</button>
+  </div>
+</nav>
+
+<main id="main">
+
+<section id="home" class="pt-40 pb-0">
+  <div class="container">
+    <p class="eyebrow reveal"><span data-en>Sat · 05 Sep 2026 · Bangkok, Thailand</span><span data-th>เสาร์ · 5 ก.ย. 2569 · กรุงเทพฯ ประเทศไทย</span></p>
+    <h1 class="hl-1 disp mt-6 reveal"><span data-en>Seven Temples,<br>One Day.</span><span data-th class="thai">เจ็ดวัด<br>ในหนึ่งวัน</span></h1>
+    <p class="thai text-[var(--stone)] text-base md:text-lg mt-4 reveal"><span data-en>เจ็ดวัดมงคล ในหนึ่งวัน — เดินทางด้วยรถสาธารณะ</span><span data-th>Seven Temples, One Day — by public transit</span></p>
+    <p class="mt-6 max-w-lg text-[15px] leading-relaxed text-[var(--ink)]/80 reveal"><span data-en>A self-guided pilgrimage through Bangkok's old city — on foot, by ferry, and by rail. No bookings, no guide, just a considered route and seven places worth slowing down for.</span><span data-th class="thai">ทริปแสวงบุญด้วยตัวเองผ่านเมืองเก่ากรุงเทพฯ — เดินเท้า นั่งเรือ และรถไฟฟ้า ไม่ต้องจอง ไม่ต้องมีไกด์ มีเพียงเส้นทางที่คิดมาอย่างดี และเจ็ดสถานที่ที่ควรค่าแก่การหยุดพัก</span></p>
+    <div class="flex gap-8 mt-8 reveal">
+      <a href="#route" class="underline-hover mono text-xs tracking-widest uppercase"><span data-en>The Route ↓</span><span data-th class="thai" style="text-transform:none">ดูเส้นทาง ↓</span></a>
+      <a href="#map-section" class="underline-hover mono text-xs tracking-widest uppercase"><span data-en>The Map ↗</span><span data-th class="thai" style="text-transform:none">ดูแผนที่ ↗</span></a>
+    </div>
+  </div>
+  <div class="mt-16 reveal">
+    <div class="hero-slider w-full h-[50vh] md:h-[62vh]">
+      <div id="heroTrack" class="hero-track"></div>
+      <p id="heroCap" class="hero-cap absolute left-6 bottom-4 md:left-12 mono text-[11px] tracking-widest uppercase text-white z-[2]"></p>
+      <div id="heroDots" class="hero-dots"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section pt-16">
+  <div class="container">
+    <div class="flex flex-wrap gap-y-4 reveal">
+      <div class="stat-cell"><p class="mono text-2xl md:text-3xl">07</p><p class="mono text-[10px] tracking-widest uppercase text-[var(--stone)] mt-1"><span data-en>Temples</span><span data-th class="thai" style="text-transform:none">วัด</span></p></div>
+      <div class="stat-cell"><p class="mono text-2xl md:text-3xl">12km</p><p class="mono text-[10px] tracking-widest uppercase text-[var(--stone)] mt-1"><span data-en>Distance</span><span data-th class="thai" style="text-transform:none">ระยะทาง</span></p></div>
+      <div class="stat-cell"><p class="mono text-2xl md:text-3xl">9h</p><p class="mono text-[10px] tracking-widest uppercase text-[var(--stone)] mt-1"><span data-en>On the move</span><span data-th class="thai" style="text-transform:none">เวลาเดินทาง</span></p></div>
+      <div class="stat-cell"><p class="mono text-2xl md:text-3xl">฿420</p><p class="mono text-[10px] tracking-widest uppercase text-[var(--stone)] mt-1"><span data-en>Est. budget</span><span data-th class="thai" style="text-transform:none">งบประมาณ</span></p></div>
+      <div class="stat-cell"><p class="mono text-2xl md:text-3xl">28+</p><p class="mono text-[10px] tracking-widest uppercase text-[var(--stone)] mt-1"><span data-en>Frames</span><span data-th class="thai" style="text-transform:none">ภาพถ่าย</span></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="route" class="section">
+  <div class="container">
+    <p class="eyebrow reveal"><span data-en>The Itinerary</span><span data-th>แผนการเดินทาง</span></p>
+    <h2 class="hl-2 disp mt-4 reveal"><span data-en>The Route</span><span data-th class="thai">เส้นทาง</span></h2>
+    <p class="mt-4 max-w-md text-[15px] text-[var(--stone)] reveal"><span data-en>In order of visit — a line drawn from the Grand Palace out to the Golden Mount. Hover a name to see the place.</span><span data-th class="thai">เรียงตามลำดับการเยี่ยมชม จากพระบรมมหาราชวังสู่ภูเขาทอง ชี้ที่ชื่อวัดเพื่อดูภาพสถานที่</span></p>
+    <div id="routeList" class="mt-10 reveal"></div>
+  </div>
+</section>
+
+<section id="map-section" class="section pt-0">
+  <div class="container">
+    <p class="eyebrow reveal"><span data-en>Get There</span><span data-th>การเดินทาง</span></p>
+    <h2 class="hl-2 disp mt-4 reveal"><span data-en>Follow the Line</span><span data-th class="thai">ตามเส้นทาง</span></h2>
+    <div class="map-frame mt-10 reveal"><div id="map"></div></div>
+    <div class="grid sm:grid-cols-3 gap-8 mt-10 reveal">
+      <div><p class="mono text-xs text-[var(--ember)]">08:00 · <span data-en>MRT BLUE LINE</span><span data-th>รถไฟฟ้าใต้ดินสายสีน้ำเงิน</span></p><p class="text-sm mt-2 text-[var(--stone)]"><span data-en>Sanam Chai — the gateway to royal Bangkok.</span><span data-th class="thai">สถานีสนามไชย ประตูสู่เขตพระราชวัง</span></p></div>
+      <div><p class="mono text-xs text-[var(--ember)]">10:10 · <span data-en>FERRY CROSSING</span><span data-th>ข้ามฟากด้วยเรือ</span></p><p class="text-sm mt-2 text-[var(--stone)]"><span data-en>Tha Tien → Wat Arun. ฿5, five minutes.</span><span data-th class="thai">ท่าเตียน → วัดอรุณ ฿5 ใช้เวลา 5 นาที</span></p></div>
+      <div><p class="mono text-xs text-[var(--ember)]">13:15 · <span data-en>ON FOOT</span><span data-th>เดินเท้า</span></p><p class="text-sm mt-2 text-[var(--stone)]"><span data-en>A 600m stroll links the old city's hidden lanes.</span><span data-th class="thai">เดินเท้า 600 เมตร เชื่อมตรอกซอกซอยเมืองเก่า</span></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="schedule" class="section">
+  <div class="container">
+    <p class="eyebrow reveal"><span data-en>The Schedule</span><span data-th>กำหนดการ</span></p>
+    <h2 class="hl-2 disp mt-4 reveal"><span data-en>Hour by Hour</span><span data-th class="thai">ตารางเวลา</span></h2>
+    <div id="timelineList" class="mt-10 reveal"></div>
+  </div>
+</section>
+
+<section id="temples" class="section">
+  <div class="container">
+    <p class="eyebrow reveal"><span data-en>The Seven</span><span data-th>เจ็ดวัด</span></p>
+    <h2 class="hl-2 disp mt-4 reveal"><span data-en>Sacred Encounters</span><span data-th class="thai">ที่ที่ศรัทธาบรรจบ</span></h2>
+    <div id="templeSpreads" class="mt-6 reveal"></div>
+  </div>
+</section>
+
+<section id="guide" class="section">
+  <div class="container">
+    <p class="eyebrow reveal"><span data-en>Before You Go</span><span data-th>ก่อนออกเดินทาง</span></p>
+    <h2 class="hl-2 disp mt-4 reveal"><span data-en>Field Notes</span><span data-th class="thai">บันทึกภาคสนาม</span></h2>
+    <div id="notesList" class="notes mt-10 grid md:grid-cols-2 md:gap-x-16 reveal"></div>
+  </div>
+</section>
+
+<section class="section pt-0">
+  <div class="container">
+    <p class="eyebrow reveal"><span data-en>Frames Worth Keeping</span><span data-th>ภาพที่ควรเก็บไว้</span></p>
+    <h2 class="hl-2 disp mt-4 reveal"><span data-en>The Photo Notes</span><span data-th class="thai">บันทึกภาพถ่าย</span></h2>
+    <div id="photoGrid" class="photo-grid grid grid-cols-2 md:grid-cols-3 gap-6 mt-10 reveal"></div>
+  </div>
+</section>
+
+<section id="checklist" class="section">
+  <div class="container">
+    <p class="eyebrow reveal"><span data-en>Track Your Visit</span><span data-th>ติดตามการเยี่ยมชม</span></p>
+    <h2 class="hl-2 disp mt-4 reveal"><span data-en>Temple Checklist</span><span data-th class="thai">เช็คลิสต์เยี่ยมวัด</span></h2>
+    <div class="flex items-center gap-6 mt-10 reveal">
+      <div id="checklistItems" class="flex flex-wrap gap-4"></div>
+    </div>
+    <div class="flex items-center gap-4 mt-8 max-w-sm reveal">
+      <p id="checklistCount" class="mono text-sm">0 / 7</p>
+      <div class="progress-track"><div id="checklistFill" class="progress-fill"></div></div>
+    </div>
+    <p id="checklistDone" class="mono text-xs tracking-widest uppercase text-[var(--ember)] mt-4 opacity-0 transition-opacity"><span data-en>All seven, complete.</span><span data-th class="thai" style="text-transform:none">ครบทั้งเจ็ดวัดแล้ว</span></p>
+  </div>
+</section>
+
+</main>
+
+<footer class="section pb-16">
+  <div class="container">
+    <p class="thai text-[var(--stone)] reveal"><span data-en>เดินช้า ๆ มองให้ลึก</span><span data-th>Walk slowly. Look deeply.</span></p>
+    <h2 class="big-close mt-3 reveal"><span data-en>Walk slowly.<br>Look deeply.</span><span data-th class="thai">เดินช้า ๆ<br>มองให้ลึก</span></h2>
+    <div class="hairline mt-16 pt-8 flex flex-wrap justify-between gap-4">
+      <p class="mono text-xs text-[var(--stone)]">© 2026 Bangkok Temple Quest</p>
+      <p class="mono text-xs text-[var(--stone)]"><span data-en>A self-guided pilgrimage. No bookings required.</span><span data-th class="thai" style="text-transform:none">ทริปแสวงบุญด้วยตัวเอง ไม่ต้องจองล่วงหน้า</span></p>
+    </div>
+  </div>
+</footer>
+
+<a id="backtop" href="#home" class="backtop" aria-label="Back to top">↑</a>
+<div id="routePreview"><img id="routePreviewImg" src="" alt=""></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const temples=[
+ {n:'Wat Phra Kaew',thai:'วัดพระศรีรัตนศาสดาราม',lat:13.7517,lng:100.4925,img:'https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20Phra%20Kaew%2C%20Grand%20Palace%2C%20Bangkok%2C%20Thailand.jpg?width=1200',
+  history:{en:'The spiritual heart of Thailand, home to the revered Emerald Buddha within the Grand Palace complex.',th:'หัวใจแห่งศรัทธาของไทย ประดิษฐานพระแก้วมรกตภายในพระบรมมหาราชวัง'},
+  famous:{en:'Emerald Buddha & glittering mosaics',th:'พระแก้วมรกตและสถาปัตยกรรมวิจิตร'},
+  prayer:{en:'Merit, clarity and fresh beginnings',th:'เสริมสิริมงคลและความชัดเจน'},
+  spot:{en:'The gilded guardians at the eastern gate',th:'ยักษ์ทวารบาลและเจดีย์ทอง'},
+  hours:'08:30–15:30',duration:{en:'45–60 min',th:'45–60 นาที'},travel:{en:'Walk 12 min from MRT Sanam Chai',th:'เดิน 12 นาทีจาก MRT สนามไชย'}},
+ {n:'Wat Pho',thai:'วัดโพธิ์',lat:13.7465,lng:100.4930,img:'https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20Pho%20Bangkok%20Thailand.jpg?width=1200',
+  history:{en:'Bangkok\u2019s great school of traditional medicine, and home to a reclining Buddha of extraordinary scale.',th:'วัดสำคัญแห่งการแพทย์แผนไทย โดดเด่นด้วยพระพุทธไสยาสน์ขนาดมหึมา'},
+  famous:{en:'46m Reclining Buddha',th:'พระพุทธไสยาสน์ 46 เมตร'},
+  prayer:{en:'Wellness and peaceful rest',th:'สุขภาพและความสงบ'},
+  spot:{en:'The mother-of-pearl feet detail',th:'ลวดลายมุกใต้พระบาท'},
+  hours:'08:00–18:30',duration:{en:'40 min',th:'40 นาที'},travel:{en:'8 min walk from Wat Phra Kaew',th:'เดิน 8 นาทีจากวัดพระแก้ว'}},
+ {n:'Wat Arun',thai:'วัดอรุณราชวราราม',lat:13.7437,lng:100.4889,img:'https://commons.wikimedia.org/wiki/Special:FilePath/0000140%20-%20Wat%20Arun%20Ratchawararam%20005.jpg?width=1200',
+  history:{en:'The Temple of Dawn rises from the Chao Phraya in a mosaic of porcelain and myth.',th:'วัดอรุณริมเจ้าพระยา งดงามด้วยพระปรางค์ประดับกระเบื้องเคลือบ'},
+  famous:{en:'Riverside prang',th:'พระปรางค์ริมแม่น้ำ'},
+  prayer:{en:'New beginnings and illumination',th:'เริ่มต้นใหม่และแสงสว่าง'},
+  spot:{en:'The view back to Wat Pho from the ferry',th:'มุมมองจากเรือข้ามฟาก'},
+  hours:'08:00–18:00',duration:{en:'45 min',th:'45 นาที'},travel:{en:'Tha Tien ferry, 5 minutes',th:'นั่งเรือท่าเตียน 5 นาที'}},
+ {n:'Wat Kalayanamit',thai:'วัดกัลยาณมิตร',lat:13.7384,lng:100.4931,img:'https://commons.wikimedia.org/wiki/Special:FilePath/Entrance%20of%20Wat%20Kanlayanamit.jpg?width=1200',
+  history:{en:'A serene riverside temple, known for its enormous seated Buddha and Chinese-influenced heritage.',th:'วัดริมน้ำอันสงบ มีพระพุทธไตรรัตนนายกองค์ใหญ่และกลิ่นอายไทย-จีน'},
+  famous:{en:'Luang Pho To Buddha',th:'หลวงพ่อโต'},
+  prayer:{en:'Safe journeys and true friendship',th:'การเดินทางปลอดภัยและมิตรภาพ'},
+  spot:{en:'The bell tower, looking toward the river',th:'หอระฆังริมแม่น้ำ'},
+  hours:'08:00–16:30',duration:{en:'30 min',th:'30 นาที'},travel:{en:'12 min riverside walk from Wat Arun',th:'เดินเลียบแม่น้ำ 12 นาทีจากวัดอรุณ'}},
+ {n:'Wat Ratchabophit',thai:'วัดราชบพิธสถิตมหาสีมาราม',lat:13.7482,lng:100.4996,img:'https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20Ratchabopit%20%28I%29.jpg?width=1200',
+  history:{en:'A jewel-box temple where Thai craftsmanship meets distinctive European Gothic design.',th:'วัดงดงามราวกล่องอัญมณี ผสานช่างศิลป์ไทยกับศิลปะตะวันตก'},
+  famous:{en:'Porcelain chedi & cloister',th:'พระเจดีย์กระเบื้องเคลือบ'},
+  prayer:{en:'Harmony and balanced perspective',th:'ความสมดุลและความกลมเกลียว'},
+  spot:{en:'The tiled courtyard in soft shade',th:'ลานกระเบื้องและระเบียงคด'},
+  hours:'08:00–17:00',duration:{en:'25 min',th:'25 นาที'},travel:{en:'20 min walk, or a short tuk-tuk',th:'เดิน 20 นาที หรือรถรับจ้างระยะสั้น'}},
+ {n:'Wat Suthat',thai:'วัดสุทัศนเทพวราราม',lat:13.7500,lng:100.4996,img:'https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20suthud.jpg?width=1200',
+  history:{en:'One of Bangkok\u2019s grandest royal temples, framed by the iconic Giant Swing.',th:'พระอารามหลวงอันยิ่งใหญ่ คู่กับเสาชิงช้าอันเป็นสัญลักษณ์'},
+  famous:{en:'Giant Swing & vast murals',th:'เสาชิงช้าและจิตรกรรมฝาผนัง'},
+  prayer:{en:'Stability, courage and success',th:'ความมั่นคง ความกล้าหาญ และความสำเร็จ'},
+  spot:{en:'The symmetrical sweep beneath Sao Chingcha',th:'มุมสมมาตรใต้เสาชิงช้า'},
+  hours:'08:00–18:00',duration:{en:'35 min',th:'35 นาที'},travel:{en:'5 min walk from Ratchabophit',th:'เดิน 5 นาทีจากวัดราชบพิธ'}},
+ {n:'Wat Saket',thai:'วัดสระเกศ',lat:13.7537,lng:100.5062,img:'https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20Saket%2C%20Bangkok%2C%20Thailand.jpg?width=1200',
+  history:{en:'The Golden Mount is a peaceful, spiralling climb to one of the old city\u2019s most cinematic views.',th:'ภูเขาทองคือการเดินขึ้นอย่างสงบสู่เจดีย์ทองและวิวเมืองเก่า'},
+  famous:{en:'Golden chedi & city panorama',th:'พระบรมบรรพตและวิวเมือง'},
+  prayer:{en:'Elevation, wisdom and good fortune',th:'ปัญญา ความก้าวหน้า และโชคดี'},
+  spot:{en:'The westward panorama at golden hour',th:'ทิศตะวันตกยามแสงเย็น'},
+  hours:'07:30–19:00',duration:{en:'45 min',th:'45 นาที'},travel:{en:'18 min walk from Wat Suthat',th:'เดิน 18 นาทีจากวัดสุทัศน์'}}
+];
+
+const timeline=[
+ ['08:00',{en:'Start at MRT Sanam Chai',th:'เริ่มต้นที่ MRT สนามไชย'},{en:'Meet beneath the old-city arches. Water, sunscreen, curiosity.',th:'นัดพบใต้ซุ้มประตูเมืองเก่า เตรียมน้ำ ครีมกันแดด และความอยากรู้อยากเห็น'}],
+ ['08:30–11:30',{en:'Royal & riverside quartet',th:'สี่วัดหลวงริมน้ำ'},{en:'Wat Phra Kaew · Wat Pho · Wat Arun · Wat Kalayanamit',th:'วัดพระแก้ว · วัดโพธิ์ · วัดอรุณ · วัดกัลยาณมิตร'}],
+ ['12:30',{en:'Lunch by the river',th:'พักทานอาหารริมน้ำ'},{en:'Pause for khao chae, or a quick local bowl, before the old city.',th:'แวะพักทานข้าวแช่ หรืออาหารจานเดียวก่อนลุยเมืองเก่าต่อ'}],
+ ['13:30–15:30',{en:'The old city ascent',th:'มุ่งสู่เมืองเก่าชั้นใน'},{en:'Wat Ratchabophit · Wat Suthat · Wat Saket',th:'วัดราชบพิธ · วัดสุทัศน์ · วัดสระเกศ'}],
+ ['17:00',{en:'Return with the sunset',th:'กลับพร้อมพระอาทิตย์ตก'},{en:'Leave with a camera full of gold, and a lighter heart.',th:'กลับบ้านพร้อมภาพถ่ายเต็มเมมโมรี่และใจที่เบาสบาย'}]
+];
+
+const notes=[
+ [{en:'Dress with care',th:'แต่งกายให้เหมาะสม'},{en:'Shoulders and knees covered. Bring a light wrap for easy transitions between temples.',th:'ปกปิดไหล่และเข่า พกผ้าคลุมบาง ๆ ไว้สลับใส่ระหว่างวัด'}],
+ [{en:'Weather ready',th:'เตรียมพร้อมรับอากาศ'},{en:'September is lush and humid — umbrella, water, and breathable layers.',th:'กันยายนชื้นและร้อนอบอ้าว พกร่ม น้ำดื่ม และเสื้อผ้าโปร่งสบาย'}],
+ [{en:'Shoot respectfully',th:'ถ่ายภาพอย่างสุภาพ'},{en:'No flash at sacred images. Never obstruct worshippers or pathways.',th:'งดแฟลชกับพระพุทธรูปสำคัญ และอย่ากีดขวางทางเดินหรือผู้มาสักการะ'}],
+ [{en:'Save smartly',th:'ใช้จ่ายอย่างคุ้มค่า'},{en:'Keep small cash for boats and entry. Street lunch keeps the day under ฿500.',th:'พกเงินสดย่อยไว้ค่าเรือและค่าเข้าชม ทานอาหารริมทางช่วยให้ทั้งวันไม่เกิน 500 บาท'}]
+];
+
+const photos=[
+ ['https://commons.wikimedia.org/wiki/Special:FilePath/0000140%20-%20Wat%20Arun%20Ratchawararam%20005.jpg?width=900',{en:'Wat Arun · the prang at first light',th:'วัดอรุณ · พระปรางค์ยามเช้า'}],
+ ['https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20Phra%20Kaew%2C%20Grand%20Palace%2C%20Bangkok%2C%20Thailand.jpg?width=900',{en:'Wat Phra Kaew · inside the Grand Palace walls',th:'วัดพระแก้ว · ภายในกำแพงพระบรมมหาราชวัง'}],
+ ['https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20Saket%2C%20Bangkok%2C%20Thailand.jpg?width=900',{en:'Wat Saket · the Golden Mount',th:'วัดสระเกศ · ภูเขาทอง'}],
+ ['https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20Ratchabopit%20%28I%29.jpg?width=900',{en:'Wat Ratchabophit · tile and cloister',th:'วัดราชบพิธ · กระเบื้องและระเบียงคด'}],
+ ['https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20Pho%20Bangkok%20Thailand.jpg?width=900',{en:'Wat Pho · the reclining Buddha hall',th:'วัดโพธิ์ · วิหารพระพุทธไสยาสน์'}],
+ ['https://commons.wikimedia.org/wiki/Special:FilePath/Wat%20suthud.jpg?width=900',{en:'Wat Suthat · beneath the Giant Swing',th:'วัดสุทัศน์ · ใต้เสาชิงช้า'}]
+];
+
+function bi(obj,cls){cls=cls||'';return `<span data-en class="${cls}">${obj.en}</span><span data-th class="${cls} thai">${obj.th}</span>`}
+
+// hero slider — cycles through temple photos, left-to-right
+const heroOrder=[2,0,1,6,4]; // Wat Arun, Wat Phra Kaew, Wat Pho, Wat Saket, Wat Ratchabophit
+const heroSlides=heroOrder.map(i=>({img:temples[i].img.replace('width=1200','width=2000'),en:`${temples[i].n} · ${temples[i].famous.en}`,th:`${temples[i].thai} · ${temples[i].famous.th}`}));
+const heroTrack=document.getElementById('heroTrack'),heroCap=document.getElementById('heroCap'),heroDots=document.getElementById('heroDots');
+heroTrack.innerHTML=heroSlides.map(s=>`<div class="hero-slide"><img class="hero-photo" src="${s.img}" alt="${s.en}" loading="eager"></div>`).join('');
+heroDots.innerHTML=heroSlides.map((_,i)=>`<button class="hero-dot ${i===0?'on':''}" aria-label="Show slide ${i+1}" data-i="${i}"></button>`).join('');
+let heroIdx=0;
+function heroCapText(){return document.documentElement.classList.contains('lang-th')?heroSlides[heroIdx].th:heroSlides[heroIdx].en}
+function goHero(i){
+  heroIdx=(i+heroSlides.length)%heroSlides.length;
+  heroTrack.style.transform=`translateX(-${heroIdx*100}%)`;
+  heroCap.style.opacity=0;
+  setTimeout(()=>{heroCap.textContent=heroCapText().toUpperCase();heroCap.style.opacity=1},350);
+  heroDots.querySelectorAll('.hero-dot').forEach((d,i2)=>d.classList.toggle('on',i2===heroIdx));
+}
+goHero(0);
+heroDots.addEventListener('click',e=>{const b=e.target.closest('.hero-dot');if(b)goHero(+b.dataset.i)});
+const heroReduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let heroTimer;
+function startHero(){if(heroReduced)return;heroTimer=setInterval(()=>goHero(heroIdx+1),5000)}
+function stopHero(){clearInterval(heroTimer)}
+startHero();
+document.querySelector('.hero-slider').addEventListener('mouseenter',stopHero);
+document.querySelector('.hero-slider').addEventListener('mouseleave',startHero);
+
+// route list
+document.getElementById('routeList').innerHTML=temples.map((t,i)=>`
+<a href="#temple-${i}" class="route-row" data-img="${t.img}">
+  <span class="idx">${String(i+1).padStart(2,'0')}</span>
+  <span>
+    <span class="name block">${bi({en:t.n,th:t.thai})}</span>
+    <span class="thai-sub">${bi({en:t.thai,th:t.n})}</span>
+  </span>
+  <span class="time">${t.hours}</span>
+  <span class="arrow">→</span>
+</a>`).join('');
+
+// route hover preview
+const preview=document.getElementById('routePreview'),previewImg=document.getElementById('routePreviewImg');
+document.querySelectorAll('.route-row').forEach(row=>{
+  row.addEventListener('mouseenter',()=>{previewImg.src=row.dataset.img;preview.style.opacity=1});
+  row.addEventListener('mousemove',e=>{preview.style.transform=`translate(${e.clientX+24}px, ${e.clientY-140}px)`});
+  row.addEventListener('mouseleave',()=>{preview.style.opacity=0});
+});
+
+// timeline
+document.getElementById('timelineList').innerHTML=timeline.map(([time,title,desc])=>`
+<div class="tl-row">
+  <div class="tl-time">${time}</div>
+  <div class="rule"></div>
+  <div>
+    <h4 class="disp font-semibold text-lg">${bi(title)}</h4>
+    <p class="text-sm text-[var(--stone)] mt-1">${bi(desc)}</p>
+  </div>
+</div>`).join('');
+
+// temple spreads
+document.getElementById('templeSpreads').innerHTML=temples.map((t,i)=>`
+<article class="spread ${i%2?'flip':''}" id="temple-${i}">
+  <div class="img-col"><img src="${t.img}" alt="${t.n}" loading="lazy"></div>
+  <div class="txt-col">
+    <p class="num">${String(i+1).padStart(2,'0')} / 07</p>
+    <h3>${bi({en:t.n,th:t.thai})}</h3>
+    <p class="thai-name thai">${bi({en:t.thai,th:t.n})}</p>
+    <p class="hist">${bi(t.history)}</p>
+    <div class="facts">
+      <div class="fact"><b>${bi({en:'FAMOUS FOR',th:'จุดเด่น'})}</b><span>${bi(t.famous)}</span></div>
+      <div class="fact"><b>${bi({en:'PRAYER',th:'คำอธิษฐาน'})}</b><span>${bi(t.prayer)}</span></div>
+      <div class="fact"><b>${bi({en:'BEST VIEW',th:'มุมถ่ายภาพ'})}</b><span>${bi(t.spot)}</span></div>
+      <div class="fact"><b>${bi({en:'OPEN',th:'เวลาเปิด'})}</b><span>${t.hours}</span></div>
+      <div class="fact"><b>${bi({en:'VISIT',th:'เวลาที่ใช้'})}</b><span>${bi(t.duration)}</span></div>
+      <div class="fact"><b>${bi({en:'GET THERE',th:'การเดินทาง'})}</b><span>${bi(t.travel)}</span></div>
+    </div>
+    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.n+' Bangkok')}" target="_blank" class="underline-hover mono text-xs tracking-widest uppercase inline-block mt-6">${bi({en:'Open in Google Maps ↗',th:'เปิดใน Google Maps ↗'})}</a>
+  </div>
+</article>`).join('');
+
+// field notes
+document.getElementById('notesList').innerHTML=notes.map(([title,text],i)=>`
+<div class="note"><span class="num">${String(i+1).padStart(2,'0')}</span><div><h4>${bi(title)}</h4><p>${bi(text)}</p></div></div>`).join('');
+
+// photo grid
+document.getElementById('photoGrid').innerHTML=photos.map(([src,cap])=>`
+<figure><img src="${src}" alt="${cap.en}" loading="lazy"><figcaption>${bi(cap)}</figcaption></figure>`).join('');
+
+// map
+const map=L.map('map',{scrollWheelZoom:false,zoomControl:true}).setView([13.747,100.497],14);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO'}).addTo(map);
+const coords=temples.map(t=>[t.lat,t.lng]);
+L.polyline(coords,{color:'#15130F',weight:2,opacity:.85}).addTo(map);
+map.fitBounds(L.latLngBounds(coords),{padding:[36,36]});
+temples.forEach((t,i)=>{
+  const icon=L.divIcon({className:'',html:`<div class="stop-marker">${i+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+  L.marker([t.lat,t.lng],{icon}).addTo(map).bindPopup(`<b>${i+1}. ${t.n} · ${t.thai}</b><br><small>${t.famous.en}</small>`);
+});
+
+// checklist
+const saved=JSON.parse(localStorage.getItem('btq-checklist-v2')||'[]');
+const checklistItems=document.getElementById('checklistItems');
+checklistItems.innerHTML=temples.map((t,i)=>`<button class="stamp ${saved.includes(i)?'on':''}" data-id="${i}" aria-label="Mark ${t.n} as visited">${i+1}</button>`).join('');
+function updateChecklist(){
+  const all=[...document.querySelectorAll('.stamp.on')];
+  document.getElementById('checklistCount').textContent=`${all.length} / 7`;
+  document.getElementById('checklistFill').style.width=`${all.length/7*100}%`;
+  document.getElementById('checklistDone').style.opacity=all.length===7?1:0;
+  localStorage.setItem('btq-checklist-v2',JSON.stringify(all.map(x=>+x.dataset.id)));
+}
+checklistItems.addEventListener('click',e=>{const b=e.target.closest('.stamp');if(!b)return;b.classList.toggle('on');updateChecklist()});
+updateChecklist();
+
+// language toggle
+const langBtn=document.getElementById('langBtn');
+function setLang(th){
+  document.documentElement.classList.toggle('lang-th',th);
+  document.documentElement.lang=th?'th':'en';
+  langBtn.textContent=th?'EN':'ไทย';
+  localStorage.setItem('btq-lang',th?'th':'en');
+  heroCap.textContent=heroCapText().toUpperCase();
+}
+langBtn.addEventListener('click',()=>setLang(!document.documentElement.classList.contains('lang-th')));
+setLang(localStorage.getItem('btq-lang')==='th');
+
+// scroll reveal
+const revealEls=document.querySelectorAll('.reveal');
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+revealEls.forEach(el=>io.observe(el));
+
+// nav solid on scroll + backtop
+const nav=document.querySelector('.nav'),backtop=document.getElementById('backtop');
+addEventListener('scroll',()=>{
+  nav.classList.toggle('solid',scrollY>10);
+  backtop.classList.toggle('show',scrollY>700);
+},{passive:true});
+</script>
+</body>
+</html>
