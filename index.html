@@ -126,6 +126,14 @@ html.lang-th [data-th]{display:inline}
 .stat-cell{padding:0 22px;border-left:1px solid var(--line)}
 .stat-cell:first-child{border-left:0;padding-left:0}
 .big-close{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:clamp(2.6rem,7vw,6rem);line-height:.98;letter-spacing:-.02em}
+/* trip tabs */
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;border:1px solid var(--line);border-radius:999px;padding:6px 14px;background:transparent;color:var(--stone);cursor:pointer;transition:.2s;white-space:nowrap}
+.tab:hover{border-color:var(--ink);color:var(--ink)}
+.tab.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.day-h{display:flex;align-items:baseline;gap:16px;margin-top:56px;margin-bottom:8px}
+.day-h .mono{color:var(--ember);font-size:12px;letter-spacing:.14em}
 </style>
 </head>
 <body>
@@ -135,7 +143,7 @@ html.lang-th [data-th]{display:inline}
 <nav class="nav">
   <div class="container flex items-center justify-between py-4">
     <a href="#home" class="disp font-semibold text-sm tracking-tight">Temple Quest <span class="mono text-[var(--ember)] text-xs align-top">'26</span></a>
-    <div class="hidden md:flex items-center gap-8">
+    <div id="bkkLinks" class="hidden md:flex items-center gap-8">
       <a href="#route" class="underline-hover"><span data-en>Route</span><span data-th>เส้นทาง</span></a>
       <a href="#map-section" class="underline-hover"><span data-en>Map</span><span data-th>แผนที่</span></a>
       <a href="#schedule" class="underline-hover"><span data-en>Schedule</span><span data-th>กำหนดการ</span></a>
@@ -145,9 +153,11 @@ html.lang-th [data-th]{display:inline}
     </div>
     <button id="langBtn" class="lang-btn" aria-label="Switch language">ไทย</button>
   </div>
+<div id="tabs" class="tabs container"></div>
 </nav>
 
 <main id="main">
+<div id="trip-bkk">
 
 <section id="home" class="pt-40 pb-0">
   <div class="container">
@@ -250,6 +260,8 @@ html.lang-th [data-th]{display:inline}
   </div>
 </section>
 
+</div>
+<div id="trip-x" hidden></div>
 </main>
 
 <footer class="section pb-16">
@@ -472,6 +484,161 @@ addEventListener('scroll',()=>{
   nav.classList.toggle('solid',scrollY>10);
   backtop.classList.toggle('show',scrollY>700);
 },{passive:true});
+</script>
+<script>
+const stL={len:{en:'Length',th:'ระยะเวลา'},go:{en:'Getting there',th:'การเดินทาง'},bud:{en:'Est. / person',th:'งบ/คน (ประมาณ)'}};
+const trips=[
+{id:'nakhon',tab:{en:'Nakhon Nayok',th:'นครนายก'},title:{en:'Rapids & Dirt Tracks',th:'ล่องแก่ง ลุย ATV'},tag:{en:'2 days, 1 night · rafting, ATV, waterfalls',th:'2 วัน 1 คืน · ล่องแก่ง ขับ ATV เดินน้ำตก'},q:'นครนายก',
+ stats:['2D1N','Car ~2h','฿2.5–4k'],
+ days:[[{en:'Day 1 · Rapids & mud',th:'วันที่ 1 · ล่องแก่ง & ตะลุย ATV'},[
+ ['07:00','ออกจากกรุงเทพฯ','ขับมาตามถนนสาย 305 ประมาณ 2 ชม. แวะกินข้าวเช้าระหว่างทาง'],
+ ['10:00','ล่องแก่งลำน้ำนครนายก','พายเรือยางฝ่าแก่ง ประมาณ 2–3 ชม. หน้าฝนน้ำแรงสนุกสุด เลือกเจ้าที่มีไกด์และชูชีพครบ'],
+ ['13:00','พักกินข้าวกลางวัน','ร้านอาหารริมน้ำใกล้จุดขึ้นเรือ เปลี่ยนชุดแห้ง'],
+ ['15:00','ขับ ATV ลุยป่า','สนาม ATV แถวปากพลี เลือกเส้น 1–2 ชม. ลุยโคลนได้เต็มที่'],
+ ['18:30','เช็คอินที่พัก + BBQ','รีสอร์ตริมน้ำหรือแคมป์ ปิ้งย่างชิลล์ ๆ ตอนเย็น']]],
+ [{en:'Day 2 · Waterfalls',th:'วันที่ 2 · น้ำตก & ขากลับ'},[
+ ['08:30','น้ำตกสาริกา / วังตะไคร้','เดินสบาย ๆ เล่นน้ำตกตอนเช้าคนยังน้อย'],
+ ['12:00','กินข้าวกลางวัน + ซื้อของฝาก','แวะตลาดหรือร้านริมทางก่อนออกเดินทาง'],
+ ['14:00','เดินทางกลับกรุงเทพฯ','ออกก่อนบ่ายแก่ ๆ เลี่ยงรถติดขากลับ']]]],
+ tips:[['ชุดสำรองครบ','เสื้อผ้าเปียกและเปื้อนโคลนแน่นอน เตรียมชุดเปลี่ยน ถุงกันน้ำ และรองเท้าที่ผูกแน่น'],['เช็คระดับน้ำ','ล่องแก่งขึ้นกับฤดูฝนและปริมาณน้ำ โทรถามเจ้าที่ก่อนจองทุกครั้ง'],['ATV ต้องปลอดภัย','สวมหมวกกันน็อก ฟังคำแนะนำไกด์ ไม่ขับเร็วเกินไปในทางโคลน']]},
+
+{id:'sattahip',tab:{en:'Sattahip',th:'สัตหีบ'},title:{en:'Sea & Pool Villa',th:'ดำน้ำ พูลวิลล่า'},tag:{en:'2 days, 1 night · snorkelling, pool villa, seafood',th:'2 วัน 1 คืน · ดำน้ำ พูลวิลล่า ซีฟู้ด'},q:'สัตหีบ ชลบุรี',
+ stats:['2D1N','Car ~2.5–3h','฿3–5k'],
+ days:[[{en:'Day 1 · Villa & seafood',th:'วันที่ 1 · พูลวิลล่า & ซีฟู้ด'},[
+ ['08:30','ออกจากกรุงเทพฯ','ขับเลียบมอเตอร์เวย์สายพัทยา–มาบตาพุด ถึงสัตหีบราว 11:30'],
+ ['12:00','ซีฟู้ดมื้อกลางวัน','ร้านอาหารทะเลแถวบ้านอำเภอ ปูปลากุ้งสดจากเรือ'],
+ ['14:00','เช็คอินพูลวิลล่า','ลงสระ เล่นน้ำ ชิลล์ก่อนตะวันตก'],
+ ['17:30','ดูพระอาทิตย์ตกริมหาด','เดินเล่นชายหาดใกล้ที่พัก'],
+ ['19:00','ปิ้งย่างริมสระ','ซื้อวัตถุดิบมาเองหรือสั่งเซ็ตปาร์ตี้จากที่พัก']]],
+ [{en:'Day 2 · Dive day',th:'วันที่ 2 · ออกทะเลดำน้ำ'},[
+ ['07:30','ขึ้นเรือไปเกาะ','เที่ยวเรือเล็กไปเกาะแถวแสมสาร เช่น เกาะจวง เกาะครก ตามสภาพคลื่น'],
+ ['09:30','ดำน้ำตื้น / ดำน้ำลึก','ชมปะการังและฝูงปลา ดำลึกควรมีใบรับรองหรือเรียนกับอินสตรักเตอร์'],
+ ['12:30','กลับฝั่ง + อาบน้ำ','ลงสระอีกรอบก่อนเช็คเอาต์'],
+ ['14:30','เดินทางกลับกรุงเทพฯ','แวะกินของอร่อยระหว่างทาง']]]],
+ tips:[['จองเรือล่วงหน้า','ช่วงหน้าฝนคลื่นลมอาจเปลี่ยน ยืนยันกับเจ้าของเรือก่อนวันเดินทาง'],['พื้นที่ทหารเรือ','บางเกาะ/ชายหาดอยู่ในเขตควบคุม เช็คเวลาและเงื่อนไขก่อนเข้า'],['หารค่าวิลล่าให้คุ้ม','พูลวิลล่าหารกันหลายคนถูกลงมาก เลือกที่ใกล้ท่าเรือเพื่อลดเวลาเดินทาง']]},
+
+{id:'saraburi',tab:{en:'Saraburi',th:'สระบุรี'},title:{en:'Streamside Mookata',th:'หมูกระทะริมลำธาร'},tag:{en:'2 days, 1 night · mookata by the stream',th:'2 วัน 1 คืน · กินหมูกระทะริมลำธาร'},q:'สระบุรี',
+ stats:['2D1N','Car ~1.5–2h','฿1.5–2.5k'],
+ days:[[{en:'Day 1 · Merit & stream',th:'วันที่ 1 · ทำบุญ & ริมลำธาร'},[
+ ['09:00','ออกจากกรุงเทพฯ','ใช้เวลาราว 1.5–2 ชม. ไปเส้นพหลโยธิน'],
+ ['10:30','วัดพระพุทธบาท','ไหว้รอยพระพุทธบาท เดินชมตลาดหน้าวัด'],
+ ['13:00','อาหารกลางวัน','ร้านอาหารพื้นเมืองแถวพระพุทธบาท'],
+ ['15:00','น้ำตกเจ็ดสาวน้อย','เดินสั้น ๆ ลงเล่นน้ำ อากาศเย็นสบาย'],
+ ['17:30','หมูกระทะริมลำธาร','ปูเสื่อ/โต๊ะใกล้ธารน้ำ กินไปฟังเสียงน้ำไป เตรียมยากันยุง']]],
+ [{en:'Day 2 · Cave & home',th:'วันที่ 2 · ถ้ำ & ขากลับ'},[
+ ['08:30','กาแฟเช้าที่พัก','บรรยากาศธรรมชาติ ตื่นสบาย ๆ'],
+ ['10:00','ถ้ำพระโพธิสัตว์','เดินชมถ้ำและภูเขาหินปูน มีบันไดขึ้นเล็กน้อย'],
+ ['12:30','กินข้าวกลางวัน + ของฝาก','ซื้อของฝากแถวตัวเมืองก่อนกลับ'],
+ ['14:00','เดินทางกลับกรุงเทพฯ','ถึงกรุงเทพฯ ก่อนเย็น']]]],
+ tips:[['ริมลำธารช่วงฝน','ระวังน้ำป่า ถามเจ้าของร้านและอย่าตั้งโต๊ะใกล้ระดับน้ำหลาก'],['จองที่นั่งล่วงหน้า','ร้านริมลำธารดัง ๆ มักเต็มช่วงเสาร์–อาทิตย์'],['ยากันยุงจำเป็น','พกยากันยุงและเสื้อผ้าแห้งเร็ว']]},
+
+{id:'khaosok',tab:{en:'Khao Sok',th:'สุราษฎร์ · เขาสก'},title:{en:'A Night in Khao Sok',th:'นอนกลางป่าเขาสก'},tag:{en:'2 days, 1 night · rainforest, lake, jungle stay',th:'2 วัน 1 คืน · ป่าฝน เขื่อนเชี่ยวหลาน นอนกลางป่า'},q:'อุทยานแห่งชาติเขาสก',
+ stats:['2D1N','Fly + 2h','฿6–9k'],
+ days:[[{en:'Day 1 · Into the jungle',th:'วันที่ 1 · เข้าป่าเขาสก'},[
+ ['07:00','บินกรุงเทพฯ → สุราษฎร์ธานี','ประมาณ 1 ชม. 20 นาที เช่ารถหรือจองรถรับส่ง'],
+ ['10:30','เดินทางสู่เขาสก','ขับราว 1.5–2 ชม. ผ่านสวนยางและภูเขาหินปูน'],
+ ['13:00','เช็คอินที่พักกลางป่า','บังกะโลริมน้ำหรือบ้านต้นไม้ ทานข้าวกลางวัน'],
+ ['15:00','ล่องห่วงยางลำน้ำสก','ลอยตามน้ำท่ามกลางป่า หรือพายคายัคชิลล์ ๆ'],
+ ['19:00','เดินป่ากลางคืน','ฟังเสียงป่า ส่องกบ แมลง และสัตว์กลางคืนกับไกด์']]],
+ [{en:'Day 2 · Cheow Lan Lake',th:'วันที่ 2 · เขื่อนเชี่ยวหลาน'},[
+ ['07:00','ไปท่าเรือเขื่อนรัชชประภา','ขับจากเขาสกราว 1 ชม.'],
+ ['08:30','ล่องเรือหางยาวชมทะเลสาบ','ภูเขาหินปูนและแพลอยน้ำ แวะถ้ำน้ำทะลุหรือถ้ำใกล้ ๆ'],
+ ['12:30','กินข้าวกลางวันบนแพ','อาหารพื้นบ้านสดใหม่กลางทะเลสาบ'],
+ ['14:00','ขับกลับสนามบินสุราษฎร์','เผื่อเวลาเดินทางราว 2 ชม. จองไฟลต์กลับหลัง 18:00']]]],
+ tips:[['ช่วงมรสุม','ฝั่งอันดามันหน้าฝนมีน้ำหลากและอาจปิดกิจกรรม เช็คก่อนจอง'],['ยากันทากและยุง','เดินป่าควรใส่ถุงเท้ายาวและรองเท้าบู๊ตกันทาก'],['ไฟลต์กลับเผื่อเวลา','ระยะทางไกล ควรเลือกไฟลต์กลับเย็น หรือค้างเพิ่มอีกคืน']]},
+
+{id:'chiangmai',tab:{en:'Chiang Mai',th:'เชียงใหม่'},title:{en:'Culture, Hills & Nimman',th:'วัฒนธรรม ดอยสุเทพ นิมมาน'},tag:{en:'2 days, 1 night · temples, mountain, drinks',th:'2 วัน 1 คืน · เที่ยวเชิงวัฒนธรรม ชมเขา ดริ้งถนนนิมมาน'},q:'เชียงใหม่',
+ stats:['2D1N','Fly ~1h15','฿5–8k'],
+ days:[[{en:'Day 1 · Old city & Doi Suthep',th:'วันที่ 1 · เมืองเก่า & ดอยสุเทพ'},[
+ ['08:00','บินกรุงเทพฯ → เชียงใหม่','ถึงราว 9:15 ฝากกระเป๋าที่พักในเมือง'],
+ ['10:00','วัดพระสิงห์','วัดสำคัญของเมือง เดินชมวิหารลายคำและสถาปัตยกรรมล้านนา'],
+ ['12:00','ข้าวซอยมื้อกลางวัน','ข้าวซอยร้านดัง เช่น ลำดวน หรือร้านท้องถิ่นใกล้ที่พัก'],
+ ['13:30','วัดเจดีย์หลวง','เจดีย์โบราณกลางเมืองเก่า ถ่ายภาพสวย'],
+ ['16:30','ดอยสุเทพ','ขึ้นวัดพระธาตุดอยสุเทพ ชมวิวเมืองและพระอาทิตย์ตก'],
+ ['19:30','ดริ้งถนนนิมมานเหมินท์','บาร์ คราฟต์เบียร์ และร้านกาแฟ เดินซอยไล่ไปเรื่อย ๆ']]],
+ [{en:'Day 2 · Slow morning',th:'วันที่ 2 · เช้าชิลล์'},[
+ ['09:30','วัดอุโมงค์','วัดในป่า มีอุโมงค์โบราณ บรรยากาศสงบ'],
+ ['11:30','บรันช์คาเฟ่','คาเฟ่ย่านนิมมานหรือสวนตัน'],
+ ['13:30','ตลาดวโรรส','ช้อปของฝาก ไส้อั่ว แคบหมู น้ำพริกหนุ่ม'],
+ ['16:00','ไปสนามบินกลับกรุงเทพฯ','เผื่อเวลา 2–2.5 ชม. ก่อนไฟลต์']]]],
+ tips:[['แต่งกายสุภาพ','ไหล่และเข่าปกปิดเวลาเข้าวัด'],['เช้าเย็นหนาว บนดอย','ดอยสุเทพลมเย็นและอาจมีฝน พกเสื้อบาง ๆ และร่ม'],['ดริ้งแล้วไม่ขับ','ใช้แกร็บหรือรถแดงตอนกลางคืน']]},
+
+{id:'phuquoc',tab:{en:'Phu Quoc',th:'ฟู้โกว๊ก'},title:{en:'Island Escape',th:'เกาะฟู้โกว๊ก เวียดนาม'},tag:{en:'3 days, 2 nights · beaches, cable car, night market',th:'3 วัน 2 คืน · ชายหาด กระเช้าข้ามทะเล ตลาดกลางคืน'},q:'Phu Quoc Vietnam',
+ stats:['3D2N','Fly ~2h','฿12–18k'],
+ days:[[{en:'Day 1 · Arrive & night market',th:'วันที่ 1 · ถึงเกาะ & ตลาดกลางคืน'},[
+ ['ช่วงสาย','บินถึงฟู้โกว๊ก','เช็คเงื่อนไขวีซ่าและไฟลต์ตรงล่าสุดก่อนจอง แลกเงินดองที่สนามบินหรือร้านทอง'],
+ ['บ่าย','เช็คอิน + เที่ยวเมืองซองเดือง','ที่พักโซนเมือง/ชายหาดยาว เดินเล่นวัดดิ่งเกิว'],
+ ['เย็น','พระอาทิตย์ตกที่ดิ่งเกิว','ประภาคารหินริมทะเลและจุดชมพระอาทิตย์ตก'],
+ ['ค่ำ','ตลาดกลางคืนซองเดือง','ซีฟู้ดปิ้งย่าง ขนมเวียดนาม กาแฟไข่']]],
+ [{en:'Day 2 · South island',th:'วันที่ 2 · เกาะใต้'},[
+ ['09:00','หาดเซา (Sao Beach)','ทรายขาวน้ำใส เล่นน้ำและถ่ายรูปริมทะเล'],
+ ['12:00','กินข้าวเที่ยวริมหาด','ซีฟู้ดและเมนูเวียดนาม'],
+ ['14:30','กระเช้า Hon Thom','กระเช้าข้ามทะเลยาวมาก ชมวิวเกาะเล็ก ๆ จากด้านบน'],
+ ['17:30','Sunset Town / สะพานจูบ','เมืองสไตล์ยุโรปริมทะเล ชมโชว์และแสงยามค่ำ']]],
+ [{en:'Day 3 · Fishing village',th:'วันที่ 3 · หมู่บ้านชาวประมง'},[
+ ['08:30','หมู่บ้านชาวประมงฮ่ำนินห์','กินปูและอาหารทะเล ซื้อของฝากพริกไทย'],
+ ['11:00','โรงน้ำปลา / ฟาร์มพริกไทย','ดูวิธีทำน้ำปลาแบบดั้งเดิม'],
+ ['13:00','ช้อปของฝาก + เช็คเอาต์','ไข่มุก น้ำปลา พริกไทย กาแฟเวียดนาม'],
+ ['บ่าย','บินกลับกรุงเทพฯ','เผื่อเวลาเดินทางไปสนามบินราว 30–40 นาที']]]],
+ tips:[['วีซ่าและเอกสาร','ตรวจเงื่อนไขล่าสุดก่อนเดินทาง พาสปอร์ตอายุเหลือ 6 เดือนขึ้นไป'],['ใช้จ่ายเป็นเงินดอง','ตลาดและร้านเล็กเน้นเงินสด แลกเงินย่อยพกไว้'],['ฤดูกาล','ก.ย. ฝนตกบ่อย ทะเลบางวันคลื่นแรง วางแผนกิจกรรมในร่มสำรอง']]},
+
+{id:'japan',tab:{en:'Tokyo & Around',th:'ญี่ปุ่น · โตเกียว'},title:{en:'Tokyo & Around',th:'โตเกียว และรอบ ๆ'},tag:{en:'5 days, 4 nights · city, Mt Fuji, Kamakura',th:'5 วัน 4 คืน · โตเกียว ฟูจิ คามาคุระ'},q:'Tokyo Japan',
+ stats:['5D4N','Fly ~6h','฿55–80k'],
+ days:[[{en:'Day 1 · Old Tokyo',th:'วันที่ 1 · โตเกียวเก่า'},[
+ ['เช้า–สาย','ถึงโตเกียว','ซื้อ Suica/Pasmo นั่งรถเข้าเมือง เก็บของที่พักโซนอุเอโนะ/อาซากุสะ'],
+ ['บ่าย','วัดเซ็นโซจิ + นากามิเสะ','ถนนของกินและของฝาก เดินเล่นย่านอาซากุสะ'],
+ ['เย็น','โตเกียวสกายทรี / แม่น้ำสุมิดะ','ชมวิวเมืองตอนพระอาทิตย์ตก'],
+ ['ค่ำ','อเมโยโกะ อุเอโนะ','ตลาดกลางคืน อาหารริมทาง ราเมงดัง ๆ']]],
+ [{en:'Day 2 · Modern Tokyo',th:'วันที่ 2 · โตเกียวสมัยใหม่'},[
+ ['09:00','ศาลเจ้าเมจิ','เดินผ่านป่าในเมืองสู่ศาลเจ้า'],
+ ['11:00','ฮาราจูกุ + โอโมเตะซันโด','ทาเคชิตะ สตรีท และสถาปัตยกรรมร้านค้าแบรนด์'],
+ ['15:00','ชิบูย่า','ทางม้าลายชิบูย่า ช้อปปิ้ง ขึ้น Shibuya Sky ตอนเย็น'],
+ ['20:00','ชินจูกุ','ย่านโอโมอิเดะ โยโกะโชะ หรือโกลเดนไกย์ ดื่มกินยามค่ำ']]],
+ [{en:'Day 3 · Mt Fuji',th:'วันที่ 3 · ภูเขาไฟฟูจิ'},[
+ ['07:30','ชินจูกุ → คาวากุจิโกะ','นั่งรถไฟ/บัสราว 2 ชม. จองที่นั่งล่วงหน้าตามช่วงฤดู'],
+ ['10:30','เจดีย์ชูเรโต (ฟูจิโยชิดะ)','วิวเจดีย์แดงกับฟูจิ ถ้าเมฆไม่บัง'],
+ ['13:30','ทะเลสาบคาวากุจิ','ปั่นจักรยาน เดินเล่นริมทะเลสาบและคาเฟ่'],
+ ['18:00','กลับโตเกียว','ทานราเมงหรือทงคัตสึใกล้ที่พัก']]],
+ [{en:'Day 4 · Kamakura',th:'วันที่ 4 · คามาคุระ & เอโนชิมะ'},[
+ ['09:00','เดินทางไปคามาคุระ','รถไฟจากโตเกียวราว 1 ชม. ครึ่ง'],
+ ['10:30','พระใหญ่ไดบุตสึ + วัดฮาเซเดระ','วัดริมเขา ชมวิวอ่าวและสวนในวัด'],
+ ['13:00','โคมาจิ-โดริ','ถนนของกินและร้านขนม'],
+ ['16:00','เอโนชิมะ','ขึ้นหอคอยชมพระอาทิตย์ตกริมทะเล แล้วกลับโตเกียวยามค่ำ']]],
+ [{en:'Day 5 · Last bites',th:'วันที่ 5 · ช้อปและกลับ'},[
+ ['08:00','ตลาดปลาซึกิจิ','ซูชิ ไข่ม้วน และของทะเลสด ๆ เป็นมื้อเช้า'],
+ ['10:30','กินซ่า / อากิฮาบาระ','ช้อปของฝาก แผ่นสิทธิ์คืนภาษี'],
+ ['14:00','ไปสนามบิน','ถึงสนามบิน 3 ชม. ก่อนไฟลต์ ระวังสัมภาระหลายใบ']]]],
+ tips:[['เช็คเงื่อนไขเข้าเมือง','ตรวจข้อกำหนดวีซ่าและเอกสารล่าสุดของคนไทยก่อนเดินทาง'],['ช่วงพายุไต้ฝุ่น','ก.ย. เป็นฤดูไต้ฝุ่น ทำประกันเดินทางและเผื่อวันสำรอง'],['ตั๋วรถไฟและพาส','เทียบราคาตั๋วเดี่ยวกับพาสรถไฟ บางเส้นทางจองล่วงหน้าเท่านั้น']]}
+];
+function T(x){return typeof x==='string'?bi({en:x,th:x},'thai'):bi(x)}
+function tripHTML(t){
+ const st=Object.keys(stL).map((k,i)=>`<div class="stat-cell"><p class="mono text-2xl md:text-3xl">${t.stats[i]}</p><p class="mono text-[10px] tracking-widest uppercase text-[var(--stone)] mt-1">${bi(stL[k])}</p></div>`).join('');
+ const days=t.days.map(([label,items],i)=>`<div class="day-h"><span class="mono">DAY ${String(i+1).padStart(2,'0')}</span><h3 class="disp font-semibold text-2xl md:text-3xl">${bi(label)}</h3></div>`+items.map(([time,title,desc])=>`<div class="tl-row"><div class="tl-time">${time}</div><div class="rule"></div><div><h4 class="disp font-semibold text-lg">${T(title)}</h4><p class="text-sm text-[var(--stone)] mt-1">${T(desc)}</p></div></div>`).join('')).join('');
+ const tips=t.tips.map(([a,b],i)=>`<div class="note"><span class="num">${String(i+1).padStart(2,'0')}</span><div><h4>${T(a)}</h4><p>${T(b)}</p></div></div>`).join('');
+ return `<section class="pt-40 pb-16"><div class="container">
+ <p class="eyebrow">${bi(t.tag)}</p>
+ <h1 class="hl-1 disp mt-6">${bi(t.title)}</h1>
+ <div class="flex flex-wrap gap-y-4 mt-10">${st}</div>
+ <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.q)}" target="_blank" rel="noopener" class="underline-hover mono text-xs tracking-widest uppercase inline-block mt-8">${bi({en:'Open in Google Maps ↗',th:'เปิดใน Google Maps ↗'})}</a>
+ </div></section>
+ <section class="section pt-0"><div class="container"><p class="eyebrow">${bi({en:'The Itinerary',th:'แผนการเดินทาง'})}</p>${days}</div></section>
+ <section class="section pt-0"><div class="container"><p class="eyebrow">${bi({en:'Before You Go',th:'ก่อนออกเดินทาง'})}</p><h2 class="hl-2 disp mt-4">${bi({en:'Field Notes',th:'บันทึกภาคสนาม'})}</h2><div class="notes mt-10 grid md:grid-cols-3 md:gap-x-10">${tips}</div>
+ <p class="mono text-[11px] text-[var(--stone)] mt-8 max-w-xl">${bi({en:'Times and budgets are estimates — confirm prices, opening hours and bookings before you go.',th:'เวลาและงบเป็นค่าประมาณ ตรวจสอบราคา เวลาเปิด และการจองอีกครั้งก่อนเดินทาง'})}</p></div></section>`;
+}
+const tabsEl=document.getElementById('tabs'),bkkEl=document.getElementById('trip-bkk'),panelEl=document.getElementById('trip-x'),bkkLinks=document.getElementById('bkkLinks');
+tabsEl.innerHTML=`<button class="tab on" data-id="bkk">${bi({en:'Bangkok Temples',th:'วัดกรุงเทพฯ'})}</button>`+trips.map(t=>`<button class="tab" data-id="${t.id}">${bi(t.tab)}</button>`).join('');
+function showTrip(id,push){
+ const t=trips.find(x=>x.id===id);
+ tabsEl.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.id===(t?id:'bkk')));
+ bkkEl.hidden=!!t;panelEl.hidden=!t;bkkLinks.style.display=t?'none':'';
+ if(t){panelEl.innerHTML=tripHTML(t);document.title=`${t.tab.en} — ${t.title.en}`}
+ else{document.title='Seven Temples, One Day — Bangkok Temple Quest';map.invalidateSize()}
+ if(push)history.replaceState(null,'',t?'#t-'+id:location.pathname);
+ scrollTo(0,0);
+}
+tabsEl.addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)showTrip(b.dataset.id,true)});
+document.getElementById('backtop').addEventListener('click',e=>{e.preventDefault();scrollTo({top:0,behavior:'smooth'})});
+if(location.hash.startsWith('#t-'))showTrip(location.hash.slice(3));
 </script>
 </body>
 </html>
