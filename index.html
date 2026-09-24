@@ -134,6 +134,10 @@ html.lang-th [data-th]{display:inline}
 .tab.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .day-h{display:flex;align-items:baseline;gap:16px;margin-top:56px;margin-bottom:8px}
 .day-h .mono{color:var(--ember);font-size:12px;letter-spacing:.14em}
+#tripMap{height:100%}
+.ph{aspect-ratio:4/5;border:1px solid var(--ink);background:var(--paper-deep);display:grid;place-items:center;text-align:center;padding:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;color:var(--stone)}
+.trip-hero{height:44vh;background:var(--paper-deep);overflow:hidden}@media(min-width:768px){.trip-hero{height:56vh}}
+.trip-hero img{width:100%;height:100%;object-fit:cover;display:block}
 </style>
 </head>
 <body>
@@ -610,20 +614,113 @@ const trips=[
  ['14:00','ไปสนามบิน','ถึงสนามบิน 3 ชม. ก่อนไฟลต์ ระวังสัมภาระหลายใบ']]]],
  tips:[['เช็คเงื่อนไขเข้าเมือง','ตรวจข้อกำหนดวีซ่าและเอกสารล่าสุดของคนไทยก่อนเดินทาง'],['ช่วงพายุไต้ฝุ่น','ก.ย. เป็นฤดูไต้ฝุ่น ทำประกันเดินทางและเผื่อวันสำรอง'],['ตั๋วรถไฟและพาส','เทียบราคาตั๋วเดี่ยวกับพาสรถไฟ บางเส้นทางจองล่วงหน้าเท่านั้น']]}
 ];
+const PL={
+nakhon:[
+['Rafting on the Nakhon Nayok River','ล่องแก่งลำน้ำนครนายก',14.27,101.30,'','th','ล่องเรือยางฝ่าแก่งกลางป่าและภูเขา หน้าฝนน้ำแรง สนุกและท้าทายเป็นพิเศษ','แก่งน้ำแรง ป่าสองฝั่ง','2–3 ชม.','ขับจากตัวเมืองนครนายก ~30–40 นาที','โทรเช็คระดับน้ำ เลือกเจ้าที่มีชูชีพและไกด์'],
+['ATV Trails, Pak Phli','สนาม ATV ปากพลี',14.20,101.33,'','th','สนามขับ ATV ผ่านทางดินโคลน ป่ายาง และลำธารตื้น มีไกด์นำและมีให้เลือกเส้นสั้น–ยาว','ทางโคลนและลำธาร','1–2 ชม.','ต่อจากล่องแก่ง ~20–30 นาที','ใส่ชุดที่เปื้อนได้ ปิดจมูกกันฝุ่น'],
+['Sarika Waterfall','น้ำตกสาริกา',14.247,101.289,'น้ำตกสาริกา','th','น้ำตกหลายชั้นใกล้ตัวเมือง เดินง่าย ร่มรื่น เล่นน้ำได้ในหน้าฝน','น้ำตกหลายชั้น ร่มเย็น','1–2 ชม.','ขับจากตัวเมือง ~20 นาที','มาเช้าคนน้อย ใส่รองเท้ากันลื่น'],
+['Wang Takhrai Waterfall','น้ำตกวังตะไคร้',14.26,101.32,'น้ำตกวังตะไคร้','th','น้ำตกในป่ารื่นที่เดินเล่นสบาย ๆ เหมาะพักหลังกิจกรรมสนุกแรง ๆ','ธารน้ำใสในร่มไม้','1 ชม.','ต่อจากสาริกา ~15 นาที','เช็คว่าเปิดและระดับน้ำก่อนไป'],
+['Khun Dan Prakan Chon Dam','เขื่อนขุนด่านปราการชล',14.286,101.296,'เขื่อนขุนด่านปราการชล','th','เขื่อนคอนกรีตยาวมาก วิวอ่างเก็บน้ำและภูเขาสวย จุดแวะเสริมถ้ามีเวลา','สันเขื่อนยาว วิวกว้าง','45 นาที','ใกล้สาริกา ~15 นาที','แสงเย็นสวยที่สุด']],
+sattahip:[
+['Ban Amphur Seafood','ซีฟู้ดบ้านอำเภอ',12.70,100.905,'','th','ชุมชนประมงที่มีร้านอาหารทะเลสดจากเรือ เลือกปลา ปู กุ้งเองแล้วให้ร้านปรุง','ซีฟู้ดสดราคาย่อมเยา','1–1.5 ชม.','ขับต่อจากทางหลวง 331 เข้าสัตหีบ','ถามราคาต่อกิโลก่อนสั่ง'],
+['Ko Khram','เกาะครก',12.68,100.82,'เกาะครก','th','เกาะเล็กใกล้ชายฝั่งสัตหีบ น้ำใส เหมาะดำน้ำตื้นชมปลาและปะการังใกล้เกาะ','ปลาเล็กและปะการังใกล้เกาะ','ครึ่งวัน','เรือจากท่าใกล้สัตหีบ ~30–45 นาที','บางช่วงอยู่ในเขตทหารเรือ เช็คเงื่อนไข'],
+['Ko Samae San','เกาะแสมสาร',12.565,100.955,'เกาะแสมสาร','th','กลุ่มเกาะยอดนิยมของคนกรุงเทพฯ ทะเลใส มีเรือรับจ้างและจุดดำน้ำหลายแห่ง','ทะเลใส หลายจุดดำน้ำ','ครึ่งวัน','ท่าเรือแสมสาร นั่งเรือ ~20–30 นาที','ดำลึกเลือกร้านที่มีอินสตรักเตอร์'],
+['Ko Chuang','เกาะจวง',12.572,100.945,'เกาะจวง','th','เกาะใกล้แสมสาร มีหาดทรายสงบและน้ำใส เหมาะพักเล่นน้ำระหว่างทริปเรือ','หาดสงบ ดำน้ำตื้น','1–2 ชม.','รวมในทริปเรือเกาะแสมสาร','พกครีมกันแดดและรองเท้าเดินน้ำ']],
+saraburi:[
+['Wat Phra Phutthabat','วัดพระพุทธบาท',14.73,100.807,'วัดพระพุทธบาท สระบุรี','th','พระอารามหลวงเก่าแก่ที่ประดิษฐานรอยพระพุทธบาท คนเดินทางมาสักการะสม่ำเสมอ','รอยพระพุทธบาท และตลาดหน้าวัด','1–1.5 ชม.','ขับจากกรุงเทพฯ ~2 ชม.','แต่งกายสุภาพ ไหล่และเข่าปกปิด'],
+['Chet Sao Noi Waterfall','น้ำตกเจ็ดสาวน้อย',14.60,101.06,'น้ำตกเจ็ดสาวน้อย','th','น้ำตกหลายชั้นในอุทยานฯ เดินเข้าง่าย เล่นน้ำได้ตอนหน้าฝนถ้าน้ำไม่แรง','น้ำตกหลายชั้น','1–1.5 ชม.','จากพระพุทธบาท ~40 นาที','ระวังพื้นลื่น หลีกเลี่ยงเมื่อน้ำแรง'],
+['Streamside Mookata, Muak Lek','หมูกระทะริมลำธาร (มวกเหล็ก)',14.64,101.19,'','th','โซนร้านหมูกระทะและรีสอร์ตริมลำธารแถวมวกเหล็ก–แก่งคอย นั่งกินใกล้น้ำเย็น ๆ','นั่งกินริมน้ำ','1.5–2 ชม.','จากเจ็ดสาวน้อย ~30–40 นาที','เลือกโต๊ะพ้นแนวน้ำหลาก จองล่วงหน้า'],
+['Wat Tham Phra Phothisat','ถ้ำพระโพธิสัตว์',14.70,100.85,'ถ้ำพระโพธิสัตว์','th','ถ้ำและภูเขาหินปูนที่มีวัดถ้ำ เดินขึ้นบันไดชมความงามธรรมชาติ','ถ้ำหินปูนและบันได','1 ชม.','อยู่ในอำเภอพระพุทธบาท','พกน้ำ ไฟฉาย และรองเท้ากันลื่น']],
+khaosok:[
+['Khao Sok National Park','อุทยานแห่งชาติเขาสก',8.91,98.53,'อุทยานแห่งชาติเขาสก','th','ป่าฝนดึกดำบรรพ์ มีเขาหินปูน น้ำตก และสัตว์ป่ามากมาย เป็นหัวใจของทริปนี้','ป่าฝนและเขาหินปูน','ตลอดทริป','จากสนามบินสุราษฎร์ ~2 ชม.','พกยากันทาก ยุง และผ้ากันน้ำ'],
+['Sok River Tubing','ล่องห่วงยางลำน้ำสก',8.92,98.54,'','th','ล่องห่วงยางเรื่อย ๆ ตามน้ำใสท่ามกลางป่า หรือพายคายัคชิลล์ ๆ','ลอยน้ำกลางป่า','1–2 ชม.','ใกล้ที่พักโซนเขาสก','ถามระดับน้ำก่อน หน้าฝนอาจงดกิจกรรม'],
+['Cheow Lan Lake','เขื่อนรัชชประภา (เชี่ยวหลาน)',8.945,98.63,'เขื่อนรัชชประภา','th','ทะเลสาบกลางหุบเขา มีภูเขาหินปูนโผล่พ้นน้ำและแพที่พักลอยน้ำ','ภูเขาหินปูนกลางทะเลสาบ','ครึ่งวัน','จากเขาสก ~1 ชม. แล้วเรือหางยาว','จองเรือและแพล่วงหน้า'],
+['Nam Talu Cave','ถ้ำน้ำทะลุ',8.99,98.55,'','th','ถ้ำใกล้ทะเลสาบที่มีลำธารไหลผ่านและหินงอกหินย้อย','ถ้ำหินงอก หินย้อย','1 ชม.','รวมในทริปเรือเชี่ยวหลาน','พกไฟฉาย เตรียมรองเท้าเปียกน้ำ'],
+['Surat Thani Airport','สนามบินสุราษฎร์ธานี',9.1325,99.1356,'Surat Thani Airport','en','จุดเริ่มต้นและปลายทางของทริป เช่ารถหรือจองรถรับส่งไปเขาสก','ประตูสู่เขาสก','—','บินจากกรุงเทพฯ ~1 ชม. 20 นาที','จองรถรับส่งล่วงหน้า']],
+chiangmai:[
+['Wat Phra Singh','วัดพระสิงห์',18.7881,98.9819,'Wat Phra Singh','en','วัดสำคัญประจำเมือง มีวิหารลายคำงดงามสไตล์ล้านนา','วิหารลายคำ ศิลปะล้านนา','45–60 นาที','ในเมืองเก่า เดินหรือสองแถวแดง','แต่งกายสุภาพ ถอดรองเท้าก่อนเข้า'],
+['Wat Chedi Luang','วัดเจดีย์หลวง',18.7869,98.9866,'Wat Chedi Luang','en','เจดีย์อิฐโบราณกลางเมือง เคยสูงที่สุดของล้านนา เหลือร่องรอยยิ่งใหญ่','เจดีย์โบราณกลางเมืองเก่า','40 นาที','เดิน ~10 นาทีจากวัดพระสิงห์','มุมสวยตอนแดดบ่าย'],
+['Wat Phra That Doi Suthep','วัดพระธาตุดอยสุเทพ',18.8048,98.9216,'Wat Phra That Doi Suthep','en','วัดบนภูเขาที่เป็นสัญลักษณ์ของเชียงใหม่ ชมวิวทั้งเมืองจากลานวัด','เจดีย์ทองและวิวเมือง','1.5–2 ชม.','รถแดงหรือแกร็บ ~30 นาที','ไปช่วงเย็นชมพระอาทิตย์ตก พกเสื้อกันหนาว'],
+['Nimmanhaemin Road','ถนนนิมมานเหมินท์',18.796,98.968,'','en','ย่านคาเฟ่ บาร์ และร้านดีไซน์ ซอยเล็กใหญ่ให้เดินดริ้งไปเรื่อย ๆ','บาร์ คาเฟ่ คราฟต์เบียร์','ตลอดคืน','แกร็บจากในเมือง ~15 นาที','ดื่มแล้วไม่ขับ กลับด้วยแกร็บ'],
+['Wat Umong','วัดอุโมงค์',18.7787,98.953,'Wat Umong','en','วัดในป่าที่มีอุโมงค์อิฐโบราณและบรรยากาศสงบ','อุโมงค์โบราณกลางป่า','1 ชม.','แกร็บจากในเมือง ~15 นาที','ไปช่วงเช้าอากาศดี'],
+['Warorot Market','ตลาดวโรรส',18.7908,99.0,'Warorot Market','en','ตลาดสดและของฝากใหญ่ริมแม่น้ำปิง ไส้อั่ว แคบหมู น้ำพริกหนุ่ม','ของฝากเหนือครบ','1–1.5 ชม.','ริมแม่น้ำปิง ในเมือง','ตลาดบางส่วนเปิดสาย ไปหลัง 9 โมง']],
+phuquoc:[
+['Dinh Cau','ดิ่งเกิว',10.217,103.96,'Dinh Cau Phu Quoc','en','ศาลเจ้าเล็กบนโขดหินริมทะเลและประภาคาร จุดชมพระอาทิตย์ตกของเมือง','ประภาคารริมทะเล','40 นาที','เดินจากตลาดกลางคืน ~10 นาที','ไปช่วงเย็นเห็นแสงสวย'],
+['Duong Dong Night Market','ตลาดกลางคืนซองเดือง',10.214,103.964,'','en','ตลาดซีฟู้ดปิ้งย่าง ขนม และของฝาก คึกคักตอนค่ำ','อาหารทะเลปิ้งย่าง','1.5–2 ชม.','กลางเมืองซองเดือง','เช็คราคาก่อนสั่ง ต่อรองของฝาก'],
+['Sao Beach','หาดเซา',10.048,104.04,'Sao Beach Phu Quoc','en','หาดทรายขาวน้ำใสฝั่งใต้เกาะ เล่นน้ำ ถ่ายรูป และกินซีฟู้ดริมทะเล','ทรายขาว น้ำใส','2–3 ชม.','แท็กซี่/แกร็บ ~40 นาทีจากซองเดือง','ไปเช้าคนน้อย'],
+['Hon Thom Cable Car','กระเช้าข้ามทะเลฮอนทอม',10.03,104.013,'Hon Thom Cable Car','en','กระเช้าข้ามทะเลยาวมากที่ชมวิวเกาะน้อยใหญ่จากด้านบน','วิวทะเลจากกระเช้า','1–1.5 ชม.','สถานีที่อันทอย ทางใต้ของเกาะ','เช็คเวลาเปิดและช่วงปิดบำรุง'],
+['Sunset Town','ซันเซ็ตทาวน์ / สะพานจูบ',10.017,103.991,'Sunset Town Phu Quoc','en','เมืองสไตล์เมดิเตอร์เรเนียนริมทะเล มีสะพานจูบและโชว์ยามค่ำ','สะพานจูบและแสงยามค่ำ','1.5–2 ชม.','ใกล้อันทอย','ไปก่อนพระอาทิตย์ตก'],
+['Ham Ninh Fishing Village','หมู่บ้านชาวประมงฮ่ำนินห์',10.16,104.05,'Ham Ninh Phu Quoc','en','หมู่บ้านริมทะเลที่ขึ้นชื่อเรื่องปูและอาหารทะเล มีท่าเรือไม้ยาว','ปูสดและท่าเรือไม้','1.5–2 ชม.','จากซองเดือง ~30 นาที','ถามราคาต่อกิโลก่อนสั่ง']],
+japan:[
+['Senso-ji','วัดเซ็นโซจิ',35.7148,139.7967,'Senso-ji','en','วัดเก่าแก่ที่สุดของโตเกียว มีประตูฟ้าคะมินาริมงและถนนนากามิเสะ','ประตูโคมแดงและนากามิเสะ','1.5–2 ชม.','รถไฟใต้ดินสถานีอาซากุสะ','ไปเช้าตรู่ก่อนคนแน่น'],
+['Tokyo Skytree','โตเกียวสกายทรี',35.7101,139.8107,'Tokyo Skytree','en','หอคอยสูงที่สุดของญี่ปุ่น ชมวิวโตเกียวได้ไกล','วิวโตเกียว 360 องศา','1–2 ชม.','เดินจากอาซากุสะ ~20 นาที','จองตั๋วออนไลน์ประหยัดเวลา'],
+['Meiji Shrine','ศาลเจ้าเมจิ',35.6764,139.6993,'Meiji Shrine','en','ศาลเจ้าใหญ่กลางป่าในเมือง เดินผ่านประตูโทริอิสู่ความสงบ','ป่าในเมืองและประตูโทริ','1–1.5 ชม.','JR สถานีฮาราจูกุ','ไปตอนเช้าเงียบสวย'],
+['Shibuya Crossing','ชิบูย่าครอสซิ่ง',35.6595,139.7005,'Shibuya Crossing','en','สี่แยกที่คนข้ามพร้อมกันมากที่สุดแห่งหนึ่งของโลก แหล่งช้อปปิ้งและแสงสี','ทางม้าลายชื่อดัง','1–2 ชม.','JR สถานีชิบูย่า','ขึ้นจุดชมวิวชั้นสูงดูจากด้านบน'],
+['Shinjuku Golden Gai','ชินจูกุ โกลเดนไกย์',35.694,139.7035,'Golden Gai','en','ตรอกบาร์เล็ก ๆ หลายร้อยร้านและร้านอาหารเก่าย่านโอโมอิเดะ','บาร์จิ๋ว บรรยากาศยามค่ำ','2–3 ชม.','JR สถานีชินจูกุ','บางร้านมีค่าที่นั่ง ดูป้ายก่อนเข้า'],
+['Chureito Pagoda','เจดีย์ชูเรโต',35.5015,138.8016,'Chureito Pagoda','en','เจดีย์ห้าชั้นบนเนินเขา มองเห็นภูเขาไฟฟูจิเป็นฉากหลังในวันที่ฟ้าเปิด','เจดีย์กับภูเขาไฟฟูจิ','1–1.5 ชม.','รถไฟไปฟูจิโยชิดะ แล้วเดินขึ้นบันได','บันไดหลายร้อยขั้น พกน้ำ'],
+['Lake Kawaguchi','ทะเลสาบคาวากุจิ',35.516,138.764,'Lake Kawaguchi','en','ทะเลสาบยอดนิยมสำหรับชมฟูจิ มีคาเฟ่ ลานหญ้า และเส้นทางปั่นจักรยาน','วิวฟูจิริมทะเลสาบ','2–3 ชม.','รถไฟ/บัสจากชินจูกุ ~2 ชม.','วันที่ฟูจิโผล่ ควรมาช่วงเช้า'],
+['Kotoku-in (Great Buddha)','พระใหญ่ไดบุตสึ คามาคุระ',35.3168,139.5358,'Kotoku-in','en','พระพุทธรูปสำริดขนาดใหญ่กลางแจ้ง เป็นสัญลักษณ์ของคามาคุระ','พระใหญ่สำริดกลางแจ้ง','45 นาที','รถไฟสาย Enoden ไปสถานีฮาเสะ','ซื้อตั๋วเล็ก ๆ เพื่อเข้าไปในองค์พระ'],
+['Enoshima','เอโนชิมะ',35.299,139.48,'Enoshima','en','เกาะเล็กริมทะเล มีศาลเจ้า ถ้ำ และหอคอยชมพระอาทิตย์ตก','พระอาทิตย์ตกเหนือทะเล','2–3 ชม.','รถไฟ Enoden จากคามาคุระ','พกร่ม อากาศริมทะเลเปลี่ยนเร็ว'],
+['Tsukiji Outer Market','ตลาดปลาซึกิจิ',35.6655,139.7707,'Tsukiji fish market','en','ตลาดกลางแจ้งของอาหารทะเลสดและของกินริมทาง เหมาะเป็นมื้อเช้า','ซูชิ ไข่ม้วน ปลาสด','1.5–2 ชม.','รถไฟใต้ดินสถานีซึกิจิ','ไปเช้า บางร้านปิดบ่าย']]
+};
+const wc={};
+function wq(q,lg){const k=lg+'|'+q;return wc[k]||(wc[k]=fetch(`https://${lg}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q)}&gsrlimit=3&prop=pageimages|coordinates&piprop=thumbnail&pithumbsize=1200&format=json&origin=*`).then(r=>r.json()).then(j=>Object.values((j.query||{}).pages||{}).sort((a,b)=>a.index-b.index)).catch(()=>[]))}
+function km(a,b,c,d){const r=Math.PI/180;return Math.hypot((c-a)*r,(d-b)*r*Math.cos(a*r))*6371}
+async function findPlace(p){
+ const [en,,lat,lng,q,lg]=p;let img=null,co=null;
+ if(!q)return{};
+ for(const [l,qq] of [[lg,q],[lg==='th'?'en':'th',en]]){
+  const pg=await wq(qq,l);
+  if(!img){const g=pg.find(x=>x.thumbnail);if(g)img=g.thumbnail.source}
+  if(!co){const g=pg.find(x=>x.coordinates&&km(lat,lng,x.coordinates[0].lat,x.coordinates[0].lon)<25);if(g)co=[g.coordinates[0].lat,g.coordinates[0].lon]}
+  if(img&&co)break;
+ }
+ return{img,co};
+}
+let tripMap=null;
+function initTripExtras(t){
+ const pl=PL[t.id]||[];
+ if(tripMap){tripMap.remove();tripMap=null}
+ tripMap=L.map('tripMap',{scrollWheelZoom:false}).setView(pl[0]?[pl[0][2],pl[0][3]]:[13,100],9);
+ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO'}).addTo(tripMap);
+ const mk=pl.map((p,i)=>L.marker([p[2],p[3]],{icon:L.divIcon({className:'',html:`<div class="stop-marker">${i+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]})}).addTo(tripMap).bindPopup(`<b>${i+1}. ${p[0]} · ${p[1]}</b>`));
+ const fit=()=>tripMap.fitBounds(L.latLngBounds(pl.map((p,i)=>mk[i].getLatLng())),{padding:[40,40],maxZoom:13});
+ if(pl.length)fit();
+ let heroSet=false;
+ pl.forEach((p,i)=>findPlace(p).then(({img,co})=>{
+  if(co){mk[i].setLatLng(co);fit()}
+  if(img){
+   const ph=document.getElementById('ph'+i);
+   if(ph)ph.outerHTML=`<img src="${img}" alt="${p[0]}" loading="lazy">`;
+   const h=document.getElementById('tripHero');
+   if(h&&!heroSet){heroSet=true;h.innerHTML=`<img class="hero-photo" src="${img}" alt="${p[0]}">`}
+  }
+ }));
+ const key='btq-cl-'+t.id,saved=JSON.parse(localStorage.getItem(key)||'[]'),box=document.getElementById('tripStamps');
+ box.innerHTML=pl.map((p,i)=>`<button class="stamp ${saved.includes(i)?'on':''}" data-id="${i}" aria-label="Mark ${p[0]} as visited">${i+1}</button>`).join('');
+ const upd=()=>{const on=[...box.querySelectorAll('.stamp.on')];document.getElementById('tripCount').textContent=`${on.length} / ${pl.length}`;document.getElementById('tripFill').style.width=`${on.length/pl.length*100}%`;localStorage.setItem(key,JSON.stringify(on.map(x=>+x.dataset.id)))};
+ box.onclick=e=>{const b=e.target.closest('.stamp');if(b){b.classList.toggle('on');upd()}};
+ upd();
+}
 function T(x){return typeof x==='string'?bi({en:x,th:x},'thai'):bi(x)}
 function tripHTML(t){
  const st=Object.keys(stL).map((k,i)=>`<div class="stat-cell"><p class="mono text-2xl md:text-3xl">${t.stats[i]}</p><p class="mono text-[10px] tracking-widest uppercase text-[var(--stone)] mt-1">${bi(stL[k])}</p></div>`).join('');
  const days=t.days.map(([label,items],i)=>`<div class="day-h"><span class="mono">DAY ${String(i+1).padStart(2,'0')}</span><h3 class="disp font-semibold text-2xl md:text-3xl">${bi(label)}</h3></div>`+items.map(([time,title,desc])=>`<div class="tl-row"><div class="tl-time">${time}</div><div class="rule"></div><div><h4 class="disp font-semibold text-lg">${T(title)}</h4><p class="text-sm text-[var(--stone)] mt-1">${T(desc)}</p></div></div>`).join('')).join('');
+ const pl=PL[t.id]||[];
+ const spreads=pl.map((p,i)=>`<article class="spread ${i%2?'flip':''}"><div class="img-col"><div class="ph" id="ph${i}">${p[0]}</div></div><div class="txt-col"><p class="num">${String(i+1).padStart(2,'0')} / ${String(pl.length).padStart(2,'0')}</p><h3>${p[0]}</h3><p class="thai-name thai">${p[1]}</p><p class="hist thai">${p[6]}</p><div class="facts thai"><div class="fact"><b>${bi({en:'FAMOUS FOR',th:'จุดเด่น'})}</b><span>${p[7]}</span></div><div class="fact"><b>${bi({en:'VISIT',th:'เวลาที่ใช้'})}</b><span>${p[8]}</span></div><div class="fact"><b>${bi({en:'GET THERE',th:'การเดินทาง'})}</b><span>${p[9]}</span></div><div class="fact"><b>${bi({en:'TIP',th:'เคล็ดลับ'})}</b><span>${p[10]}</span></div></div><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p[0]+' '+t.q)}" target="_blank" rel="noopener" class="underline-hover mono text-xs tracking-widest uppercase inline-block mt-6">${bi({en:'Open in Google Maps ↗',th:'เปิดใน Google Maps ↗'})}</a></div></article>`).join('');
  const tips=t.tips.map(([a,b],i)=>`<div class="note"><span class="num">${String(i+1).padStart(2,'0')}</span><div><h4>${T(a)}</h4><p>${T(b)}</p></div></div>`).join('');
  return `<section class="pt-40 pb-16"><div class="container">
  <p class="eyebrow">${bi(t.tag)}</p>
  <h1 class="hl-1 disp mt-6">${bi(t.title)}</h1>
  <div class="flex flex-wrap gap-y-4 mt-10">${st}</div>
  <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.q)}" target="_blank" rel="noopener" class="underline-hover mono text-xs tracking-widest uppercase inline-block mt-8">${bi({en:'Open in Google Maps ↗',th:'เปิดใน Google Maps ↗'})}</a>
- </div></section>
+ </div><div id="tripHero" class="trip-hero mt-12"></div></section>
  <section class="section pt-0"><div class="container"><p class="eyebrow">${bi({en:'The Itinerary',th:'แผนการเดินทาง'})}</p>${days}</div></section>
+ <section class="section pt-0"><div class="container"><p class="eyebrow">${bi({en:'Get There',th:'การเดินทาง'})}</p><h2 class="hl-2 disp mt-4">${bi({en:'Follow the Line',th:'ตามเส้นทาง'})}</h2><div class="map-frame mt-10"><div id="tripMap"></div></div><p class="mono text-[11px] text-[var(--stone)] mt-3">${bi({en:'Pins are approximate — use Google Maps links below for exact locations.',th:'ตำแหน่งบนแผนที่เป็นค่าประมาณ ใช้ลิงก์ Google Maps ในแต่ละสถานที่เพื่อความแม่นยำ'})}</p></div></section>
+ <section class="section pt-0"><div class="container"><p class="eyebrow">${bi({en:'The Places',th:'สถานที่'})}</p><h2 class="hl-2 disp mt-4">${bi({en:'Where You\'ll Go',th:'ที่ที่เราจะไป'})}</h2><div class="mt-6">${spreads}</div></div></section>
  <section class="section pt-0"><div class="container"><p class="eyebrow">${bi({en:'Before You Go',th:'ก่อนออกเดินทาง'})}</p><h2 class="hl-2 disp mt-4">${bi({en:'Field Notes',th:'บันทึกภาคสนาม'})}</h2><div class="notes mt-10 grid md:grid-cols-3 md:gap-x-10">${tips}</div>
- <p class="mono text-[11px] text-[var(--stone)] mt-8 max-w-xl">${bi({en:'Times and budgets are estimates — confirm prices, opening hours and bookings before you go.',th:'เวลาและงบเป็นค่าประมาณ ตรวจสอบราคา เวลาเปิด และการจองอีกครั้งก่อนเดินทาง'})}</p></div></section>`;
+ <p class="mono text-[11px] text-[var(--stone)] mt-8 max-w-xl">${bi({en:'Times and budgets are estimates — confirm prices, opening hours and bookings before you go.',th:'เวลาและงบเป็นค่าประมาณ ตรวจสอบราคา เวลาเปิด และการจองอีกครั้งก่อนเดินทาง'})}</p></div></section>
+ <section class="section pt-0"><div class="container"><p class="eyebrow">${bi({en:'Track Your Trip',th:'ติดตามทริป'})}</p><h2 class="hl-2 disp mt-4">${bi({en:'Place Checklist',th:'เช็คลิสต์สถานที่'})}</h2><div id="tripStamps" class="flex flex-wrap gap-4 mt-10"></div><div class="flex items-center gap-4 mt-8 max-w-sm"><p id="tripCount" class="mono text-sm"></p><div class="progress-track"><div id="tripFill" class="progress-fill"></div></div></div></div></section>`;
 }
 const tabsEl=document.getElementById('tabs'),bkkEl=document.getElementById('trip-bkk'),panelEl=document.getElementById('trip-x'),bkkLinks=document.getElementById('bkkLinks');
 tabsEl.innerHTML=`<button class="tab on" data-id="bkk">${bi({en:'Bangkok Temples',th:'วัดกรุงเทพฯ'})}</button>`+trips.map(t=>`<button class="tab" data-id="${t.id}">${bi(t.tab)}</button>`).join('');
@@ -631,7 +728,7 @@ function showTrip(id,push){
  const t=trips.find(x=>x.id===id);
  tabsEl.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.id===(t?id:'bkk')));
  bkkEl.hidden=!!t;panelEl.hidden=!t;bkkLinks.style.display=t?'none':'';
- if(t){panelEl.innerHTML=tripHTML(t);document.title=`${t.tab.en} — ${t.title.en}`}
+ if(t){panelEl.innerHTML=tripHTML(t);initTripExtras(t);document.title=`${t.tab.en} — ${t.title.en}`}
  else{document.title='Seven Temples, One Day — Bangkok Temple Quest';map.invalidateSize()}
  if(push)history.replaceState(null,'',t?'#t-'+id:location.pathname);
  scrollTo(0,0);
